@@ -113,11 +113,11 @@ func (syncer *Synchronizer) processBatch(headers []types.Header, chainCfg *confi
 		header := headers[i]
 		headerMap[header.Hash()] = &header
 	}
-
 	var addressList []common.Address
+	addressList = append(addressList, common.HexToAddress("0x2bf417A46a595Facd902111c13008Cb3ECD536b7"))
+	addressList = append(addressList, common.HexToAddress("0x21EA59025C4a16E948224D100D97c3a24706C728"))
 
 	filterQuery := ethereum.FilterQuery{FromBlock: firstHeader.Number, ToBlock: lastHead.Number, Addresses: addressList}
-
 	logs, err := syncer.ethClient.FilterLogs(filterQuery)
 	if err != nil {
 		log.Error("filter logs fail", "err", err)
@@ -150,13 +150,14 @@ func (syncer *Synchronizer) processBatch(headers []types.Header, chainCfg *confi
 		blockHeaders = append(blockHeaders, bHeader)
 	}
 
-	chainContractEvent := make([]event.ContractEvent, 0, len(headers))
+	chainContractEvent := make([]event.ContractEvent, len(logs.Logs))
 	for i := range logs.Logs {
 		logEvent := logs.Logs[i]
 		if _, ok := headerMap[logEvent.BlockHash]; !ok {
 			continue
 		}
 		timestamp := headerMap[logEvent.BlockHash].Time
+		log.Info("event logs", "address", logs.Logs[i].Address, "timestamp", timestamp)
 		chainContractEvent[i] = event.ContractEventFromLog(&logs.Logs[i], timestamp)
 	}
 
