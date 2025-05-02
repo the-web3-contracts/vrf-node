@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/the-web3-contracts/vrf-node/database/event"
+	"github.com/the-web3-contracts/vrf-node/database/worker"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"os"
@@ -18,8 +19,12 @@ import (
 type DB struct {
 	gorm *gorm.DB
 
-	Blocks        common.BlocksDB
-	ContractEvent event.ContractEventDB
+	Blocks          common.BlocksDB
+	ContractEvent   event.ContractEventDB
+	EventBlocks     worker.EventBlocksDB
+	FillRandomWords worker.FillRandomWordsDB
+	PoxyCreated     worker.PoxyCreatedDB
+	RequestSend     worker.RequestSendDB
 }
 
 func NewDB(ctx context.Context, dbConfig config.DBConfig) (*DB, error) {
@@ -53,9 +58,13 @@ func NewDB(ctx context.Context, dbConfig config.DBConfig) (*DB, error) {
 	}
 
 	db := &DB{
-		gorm:          gorm,
-		Blocks:        common.NewBlocksDB(gorm),
-		ContractEvent: event.NewContractEventsDB(gorm),
+		gorm:            gorm,
+		Blocks:          common.NewBlocksDB(gorm),
+		ContractEvent:   event.NewContractEventsDB(gorm),
+		EventBlocks:     worker.NewEventBlocksDB(gorm),
+		FillRandomWords: worker.NewFillRandomWordsDB(gorm),
+		PoxyCreated:     worker.NewPoxyCreatedDB(gorm),
+		RequestSend:     worker.NewRequestSendDB(gorm),
 	}
 	return db, nil
 }
@@ -63,9 +72,13 @@ func NewDB(ctx context.Context, dbConfig config.DBConfig) (*DB, error) {
 func (db *DB) Transaction(fn func(db *DB) error) error {
 	return db.gorm.Transaction(func(tx *gorm.DB) error {
 		txDB := &DB{
-			gorm:          tx,
-			Blocks:        common.NewBlocksDB(tx),
-			ContractEvent: event.NewContractEventsDB(tx),
+			gorm:            tx,
+			Blocks:          common.NewBlocksDB(tx),
+			ContractEvent:   event.NewContractEventsDB(tx),
+			EventBlocks:     worker.NewEventBlocksDB(tx),
+			FillRandomWords: worker.NewFillRandomWordsDB(tx),
+			PoxyCreated:     worker.NewPoxyCreatedDB(tx),
+			RequestSend:     worker.NewRequestSendDB(tx),
 		}
 		return fn(txDB)
 	})

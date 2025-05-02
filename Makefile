@@ -1,6 +1,7 @@
 VRF_ABI_ARTIFACT := ./abis/DappLinkVRFManager.sol/DappLinkVRFManager.json
 BLS_FACTORY_ABI_ARTIFACT := ./abis/DappLinkVRFFactory.sol/DappLinkVRFFactory.json
 BLS_ABI_ARTIFACT := ./abis/BLSApkRegistry.sol/BLSApkRegistry.json
+BN254_ABI_ARTIFACT := ./abis/BN254.sol/BN254.json
 
 
 vrf-node:
@@ -15,8 +16,7 @@ test:
 lint:
 	golangci-lint run ./...
 
-bindings: binding-vrf binding-bls binding-factory
-
+bindings:  binding-vrf binding-bls binding-factory
 
 binding-vrf:
 	$(eval temp := $(shell mktemp))
@@ -26,9 +26,9 @@ binding-vrf:
 
 	cat $(VRF_ABI_ARTIFACT) \
 		| jq .abi \
-		| abigen --pkg bindings \
+		| abigen --pkg vrf \
 		--abi - \
-		--out bindings/dapplinkvrfmanager.go \
+		--out bindings/vrf/dapplinkvrfmanager.go \
 		--type DappLinkVRFManager \
 		--bin $(temp)
 
@@ -42,9 +42,9 @@ binding-bls:
 
 	cat $(BLS_ABI_ARTIFACT) \
 		| jq .abi \
-		| abigen --pkg bindings \
+		| abigen --pkg bls \
 		--abi - \
-		--out bindings/blsapkregistry.go \
+		--out bindings/bls/blsapkregistry.go \
 		--type BLSApkRegistry \
 		--bin $(temp)
 
@@ -59,9 +59,9 @@ binding-factory:
 
 	cat $(BLS_FACTORY_ABI_ARTIFACT) \
 		| jq .abi \
-		| abigen --pkg bindings \
+		| abigen --pkg vrf \
 		--abi - \
-		--out bindings/dapplinkvrffactory.go \
+		--out bindings/vrf/dapplinkvrffactory.go \
 		--type DappLinkVRFFactory \
 		--bin $(temp)
 

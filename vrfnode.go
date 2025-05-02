@@ -2,20 +2,27 @@ package vrf_node
 
 import (
 	"context"
+	"math/big"
 	"sync/atomic"
 
 	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/the-web3-contracts/vrf-node/config"
 	"github.com/the-web3-contracts/vrf-node/database"
+	"github.com/the-web3-contracts/vrf-node/event"
 	"github.com/the-web3-contracts/vrf-node/synchronizer"
 	"github.com/the-web3-contracts/vrf-node/synchronizer/node"
+	"github.com/the-web3-contracts/vrf-node/worker"
 )
+
+const BlockSize = 3000
 
 type VrfNode struct {
 	db *database.DB
 
 	synchronizer *synchronizer.Synchronizer
+	eventsParser *event.EventsParser
+	worker       *worker.Worker
 
 	shutdown context.CancelCauseFunc
 	stopped  atomic.Bool
@@ -40,9 +47,31 @@ func NewVrfNode(ctx context.Context, cfg *config.Config, shutdown context.Cancel
 		return nil, err
 	}
 
+	epConfig := &event.EventsParserConfig{
+		DappLinkVrfAddress:        cfg.Chain.DappLinkVrfContractAddress,
+		DappLinkVrfFactoryAddress: cfg.Chain.DappLinkVrfFactoryContractAddress,
+		EventLoopInterval:         cfg.Chain.EventInterval,
+		StartHeight:               big.NewInt(int64(cfg.Chain.StartingHeight)),
+		BlockSize:                 BlockSize,
+	}
+
+	eventsParser, err := event.NewEventsParser(db, epConfig, shutdown)
+
+	workConf := &worker.WorkerConfig{
+		LoopInternal: cfg.Chain.CallInterval,
+	}
+
+	workerF, err := worker.NewWorker(db, workConf, shutdown)
+	if err != nil {
+		log.Error("new worker fail", "err", err)
+		return nil, err
+	}
+
 	return &VrfNode{
 		db:           db,
 		synchronizer: syncer,
+		eventsParser: eventsParser,
+		worker:       workerF,
 		shutdown:     shutdown,
 	}, nil
 }
@@ -52,11 +81,27 @@ func (vn *VrfNode) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	err = vn.eventsParser.Start()
+	if err != nil {
+		return err
+	}
+	err = vn.worker.Start()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (vn *VrfNode) Stop(ctx context.Context) error {
 	err := vn.synchronizer.Close()
+	if err != nil {
+		return err
+	}
+	err = vn.eventsParser.Close()
+	if err != nil {
+		return err
+	}
+	err = vn.worker.Close()
 	if err != nil {
 		return err
 	}
