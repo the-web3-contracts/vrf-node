@@ -22,7 +22,7 @@ type DappLinkVrfManager struct {
 }
 
 func NewDappLinkVrfManager() (*DappLinkVrfManager, error) {
-	dappLinkVrfAbi, err := vrf.DappLinkVRFFactoryMetaData.GetAbi()
+	dappLinkVrfAbi, err := vrf.DappLinkVRFManagerMetaData.GetAbi()
 	if err != nil {
 		log.Error("get dapplink vrf factory meta data abi fail", "err", err)
 		return nil, err
@@ -50,8 +50,11 @@ func (dvm *DappLinkVrfManager) ProcessDappLinkVrfManagerEvent(db *database.DB, d
 		log.Error("Query contracts event list fail", "err", err)
 		return requestSendList, fillRandomWordsList, err
 	}
-
 	for _, contractEvent := range contractEventList {
+		log.Info("==========================================")
+		log.Info("DappLink Vrf Manager Contracts EventList", "contractEventListLength", len(contractEventList))
+		log.Info("DappLink Vrf Manager Contracts EventList", "contractEvent.EventSignature.String()", contractEvent.EventSignature.String(), "dvm.DappLinkVrfAbi.Events[RequestSent].ID.String()", dvm.DappLinkVrfAbi.Events["RequestSent"].ID.String())
+		log.Info("==========================================")
 		if contractEvent.EventSignature.String() == dvm.DappLinkVrfAbi.Events["RequestSent"].ID.String() {
 			requestSent, errParse := dvm.DappLinkVrfFilter.ParseRequestSent(*contractEvent.RLPLog)
 			if errParse != nil {
