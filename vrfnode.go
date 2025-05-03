@@ -2,11 +2,15 @@ package vrf_node
 
 import (
 	"context"
+
 	"math/big"
 	"sync/atomic"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 
+	clien2 "github.com/the-web3-contracts/vrf-node/client"
+	common2 "github.com/the-web3-contracts/vrf-node/common"
 	"github.com/the-web3-contracts/vrf-node/config"
 	"github.com/the-web3-contracts/vrf-node/database"
 	"github.com/the-web3-contracts/vrf-node/event"
@@ -31,7 +35,13 @@ type VrfNode struct {
 func NewVrfNode(ctx context.Context, cfg *config.Config, shutdown context.CancelCauseFunc) (*VrfNode, error) {
 	ethClient, err := node.DialEthClient(ctx, cfg.Chain.ChainRpcUrl)
 	if err != nil {
-		log.Error("new eth client fail", "err", err)
+		log.Error("new eth syncer client fail", "err", err)
+		return nil, err
+	}
+
+	callEthClient, err := clien2.EthClientWithTimeout(context.Background(), cfg.Chain.ChainRpcUrl)
+	if err != nil {
+		log.Error("new eth caller client fail", "err", err)
 		return nil, err
 	}
 
@@ -57,8 +67,17 @@ func NewVrfNode(ctx context.Context, cfg *config.Config, shutdown context.Cancel
 
 	eventsParser, err := event.NewEventsParser(db, epConfig, shutdown)
 
+	ecdsaPrivteKey, _ := common2.ParsePrivateKeyStr(cfg.Chain.PrivateKey)
+
 	workConf := &worker.WorkerConfig{
-		LoopInternal: cfg.Chain.CallInterval,
+		ChainClient:               callEthClient,
+		ChainId:                   big.NewInt(int64(cfg.Chain.ChainId)),
+		DappLinkVrfManagerAddress: common.HexToAddress(cfg.Chain.DappLinkVrfContractAddress),
+		CallerAddress:             common.HexToAddress(cfg.Chain.CallerAddress),
+		PrivateKey:                ecdsaPrivteKey,
+		NumConfirmations:          cfg.Chain.NumConfirmations,
+		SafeAbortNonceToLowCount:  cfg.Chain.SafeAbortNonceTooLowCount,
+		LoopInternal:              cfg.Chain.CallInterval,
 	}
 
 	workerF, err := worker.NewWorker(db, workConf, shutdown)
