@@ -25,6 +25,7 @@ type DB struct {
 	FillRandomWords worker.FillRandomWordsDB
 	PoxyCreated     worker.PoxyCreatedDB
 	RequestSend     worker.RequestSendDB
+	Member          worker.MembersDB
 }
 
 func NewDB(ctx context.Context, dbConfig config.DBConfig) (*DB, error) {
@@ -65,6 +66,7 @@ func NewDB(ctx context.Context, dbConfig config.DBConfig) (*DB, error) {
 		FillRandomWords: worker.NewFillRandomWordsDB(gorm),
 		PoxyCreated:     worker.NewPoxyCreatedDB(gorm),
 		RequestSend:     worker.NewRequestSendDB(gorm),
+		Member:          worker.NewMembersDB(gorm),
 	}
 	return db, nil
 }
@@ -79,6 +81,7 @@ func (db *DB) Transaction(fn func(db *DB) error) error {
 			FillRandomWords: worker.NewFillRandomWordsDB(tx),
 			PoxyCreated:     worker.NewPoxyCreatedDB(tx),
 			RequestSend:     worker.NewRequestSendDB(tx),
+			Member:          worker.NewMembersDB(tx),
 		}
 		return fn(txDB)
 	})

@@ -13,7 +13,7 @@ import (
 
 	"github.com/the-web3-contracts/vrf-node/common/tasks"
 	"github.com/the-web3-contracts/vrf-node/database"
-	"github.com/the-web3-contracts/vrf-node/node"
+	"github.com/the-web3-contracts/vrf-node/driver"
 )
 
 type WorkerConfig struct {
@@ -30,7 +30,7 @@ type WorkerConfig struct {
 type Worker struct {
 	workerConf *WorkerConfig
 	db         *database.DB
-	caller     *node.Caller
+	caller     *driver.Caller
 
 	resourceCtx    context.Context
 	resourceCancel context.CancelFunc
@@ -39,7 +39,7 @@ type Worker struct {
 
 func NewWorker(db *database.DB, workconf *WorkerConfig, shutdown context.CancelCauseFunc) (*Worker, error) {
 
-	callerConf := &node.CallerConfig{
+	callerConf := &driver.CallerConfig{
 		ChainClient:               workconf.ChainClient,
 		ChainId:                   workconf.ChainId,
 		DappLinkVrfManagerAddress: workconf.DappLinkVrfManagerAddress,
@@ -49,7 +49,7 @@ func NewWorker(db *database.DB, workconf *WorkerConfig, shutdown context.CancelC
 		SafeAbortNonceToLowCount:  workconf.SafeAbortNonceToLowCount,
 	}
 
-	callerF, err := node.NewCaller(context.Background(), callerConf)
+	callerF, err := driver.NewCaller(context.Background(), callerConf)
 	if err != nil {
 		log.Error("new caller fail", "err", err)
 		return nil, err

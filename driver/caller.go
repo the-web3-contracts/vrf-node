@@ -1,4 +1,4 @@
-package node
+package driver
 
 import (
 	"context"
@@ -137,7 +137,10 @@ func (caller *Caller) fulfillRandomWords(ctx context.Context, requestId *big.Int
 	opts.Nonce = new(big.Int).SetUint64(nonce)
 	opts.NoSend = true
 
-	tx, err := caller.DappLinkVrfContracts.FulfillRandomWords(opts, requestId, randomList)
+	var msgHash [32]byte
+	var blsParam vrf.IBLSApkRegistryVrfNoSignerAndSignature
+
+	tx, err := caller.DappLinkVrfContracts.FulfillRandomWords(opts, requestId, randomList, msgHash, big.NewInt(100), blsParam)
 	if err != nil {
 		log.Error("fulfill random words fail", "err", err)
 		return nil, err
@@ -150,7 +153,7 @@ func (caller *Caller) fulfillRandomWords(ctx context.Context, requestId *big.Int
 	case caller.isMaxPriorityFeePerGasNotFoundError(err):
 		log.Info("Don't support priority fee")
 		opts.GasTipCap = FallbackGasTipCap
-		return caller.DappLinkVrfContracts.FulfillRandomWords(opts, requestId, randomList)
+		return caller.DappLinkVrfContracts.FulfillRandomWords(opts, requestId, randomList, msgHash, big.NewInt(100), blsParam)
 	default:
 		return nil, err
 	}

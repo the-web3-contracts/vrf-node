@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/the-web3/dapplink-vrf/flags"
+	"github.com/the-web3-contracts/vrf-node/flags"
 )
 
 const (
@@ -19,6 +19,8 @@ const (
 type Config struct {
 	Migrations     string
 	Chain          ChainConfig
+	Node           NodeConfig
+	Manager        ManagerConfig
 	MasterDB       DBConfig
 	SlaveDB        DBConfig
 	SlaveDbEnable  bool
@@ -38,12 +40,27 @@ type ChainConfig struct {
 	PrivateKey                        string
 	DappLinkVrfContractAddress        string
 	DappLinkVrfFactoryContractAddress string
+	BlsRegistryAddress                string
 	CallerAddress                     string
 	NumConfirmations                  uint64
 	SafeAbortNonceTooLowCount         uint64
 	Mnemonic                          string
 	CallerHDPath                      string
 	Passphrase                        string
+}
+
+type NodeConfig struct {
+	KeyPath          string
+	WsAddr           string
+	SignTimeOut      time.Duration
+	WaitScanInterval time.Duration
+}
+
+type ManagerConfig struct {
+	WsAddr      string
+	HttpAddr    string
+	SignTimeOut time.Duration
+	NodeMembers string
 }
 
 type DBConfig struct {
@@ -112,6 +129,18 @@ func NewConfig(ctx *cli.Context) Config {
 			Name:     ctx.String(flags.SlaveDbNameFlag.Name),
 			User:     ctx.String(flags.SlaveDbUserFlag.Name),
 			Password: ctx.String(flags.SlaveDbPasswordFlag.Name),
+		},
+		Node: NodeConfig{
+			KeyPath:          ctx.String(flags.KeyPathFlag.Name),
+			WsAddr:           ctx.String(flags.WsAddrFlag.Name),
+			SignTimeOut:      ctx.Duration(flags.SignTimeOutFlag.Name),
+			WaitScanInterval: ctx.Duration(flags.WaitScanIntervalFlag.Name),
+		},
+		Manager: ManagerConfig{
+			WsAddr:      ctx.String(flags.WsAddrFlag.Name),
+			HttpAddr:    ctx.String(flags.HttpAddrFlag.Name),
+			SignTimeOut: ctx.Duration(flags.SignTimeOutFlag.Name),
+			NodeMembers: ctx.String(flags.NodeMembersFlag.Name),
 		},
 		SlaveDbEnable: ctx.Bool(flags.SlaveDbEnableFlag.Name),
 	}

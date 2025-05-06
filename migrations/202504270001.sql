@@ -68,3 +68,10 @@ CREATE TABLE IF NOT EXISTS fill_random_words (
      timestamp                     INTEGER NOT NULL CHECK (timestamp > 0)
 );
 CREATE INDEX IF NOT EXISTS fill_random_words_request_id ON request_sent(request_id);
+
+CREATE TABLE IF NOT EXISTS Members (
+   guid                          VARCHAR PRIMARY KEY,
+   member                        VARCHAR NOT NULL,
+   is_active                     SMALLINT NOT NULL DEFAULT 0,
+   timestamp                     INTEGER NOT NULL CHECK (timestamp > 0)
+);

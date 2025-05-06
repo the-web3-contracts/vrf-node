@@ -191,6 +191,58 @@ var (
 		Usage:   "The db name of the slave database",
 		EnvVars: prefixEnvVars("SLAVE_DB_NAME"),
 	}
+
+	// NodeConfig
+	KeyPathFlag = &cli.StringFlag{
+		Name:     "key-path",
+		Usage:    "node key path",
+		EnvVars:  prefixEnvVars("KEY_PATH"),
+		Required: true,
+	}
+	WsAddrFlag = &cli.StringFlag{
+		Name:     "ws-addr",
+		Usage:    "websocket addr",
+		EnvVars:  prefixEnvVars("WS_ADDR"),
+		Required: true,
+	}
+	SignTimeOutFlag = &cli.DurationFlag{
+		Name:    "sign-timeout",
+		Usage:   "Sign timeout",
+		EnvVars: prefixEnvVars("SIGN_TIMEOUT"),
+		Value:   time.Second * 5,
+	}
+	WaitScanIntervalFlag = &cli.DurationFlag{
+		Name:    "wait-scant-interval",
+		Usage:   "Wait Scan Interval",
+		EnvVars: prefixEnvVars("WAIT_SCAN_INTERVAL"),
+		Value:   time.Second * 5,
+	}
+
+	// Manager Config
+	WsManagerAddrFlag = &cli.StringFlag{
+		Name:     "ws-manager-addr",
+		Usage:    "websocket manager addr",
+		EnvVars:  prefixEnvVars("WS_MANAGER_ADDR"),
+		Required: true,
+	}
+	HttpAddrFlag = &cli.StringFlag{
+		Name:     "http-addr",
+		Usage:    "http  addr",
+		EnvVars:  prefixEnvVars("HTTP_ADDR"),
+		Required: true,
+	}
+	SignManagerTimeOutFlag = &cli.DurationFlag{
+		Name:    "sign-manager-timeout",
+		Usage:   "Sign timeout",
+		EnvVars: prefixEnvVars("SIGN_MANAGER_TIMEOUT"),
+		Value:   time.Second * 5,
+	}
+	NodeMembersFlag = &cli.StringFlag{
+		Name:     "node-members",
+		Usage:    "node members",
+		EnvVars:  prefixEnvVars("NODE_MEMBERS"),
+		Required: true,
+	}
 )
 
 var requiredFlags = []cli.Flag{
@@ -213,6 +265,8 @@ var requiredFlags = []cli.Flag{
 	NumConfirmationsFlag,
 	SafeAbortNonceTooLowCountFlag,
 	SlaveDbEnableFlag,
+	KeyPathFlag,
+	WsAddrFlag,
 }
 
 var optionalFlags = []cli.Flag{
@@ -226,6 +280,8 @@ var optionalFlags = []cli.Flag{
 	SlaveDbUserFlag,
 	SlaveDbPasswordFlag,
 	SlaveDbNameFlag,
+	SignTimeOutFlag,
+	WaitScanIntervalFlag,
 }
 
 func init() {
